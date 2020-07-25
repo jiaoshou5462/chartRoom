@@ -1,0 +1,42 @@
+*{
+	padding: 0px;
+	margin: 0px;
+	box-sizing:border-box;
+	word-break: break-all;
+}
+pre{ 
+	white-space:pre-wrap; 
+	white-space:-moz-pre-wrap; 
+	white-space:-pre-wrap; 
+	white-space:-o-pre-wrap; 
+	word-wrap:break-word; 
+} 
+/*自定义样式*/
+.text-ellipsis{
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.el-dialog__header{
+  padding: 0;
+  padding-left: 15px;
+  display: flex;
+  align-items: center;
+  height: 50px;
+}
+.el-dialog__body{
+  border-top: 1px solid #eee;
+  padding: 20px;
+}
+.el-dialog__headerbtn{
+  width: 52px;
+  height: 50px;
+  top: 0;right: 0;
+  font-size: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.el-dialog__headerbtn:hover{
+  background: #f1f1f1;
+}

@@ -1,0 +1,22 @@
+export default {
+	dynamicType:[//动态-类型
+		{key:1,val:"通知"},
+		{key:2,val:"新闻"},
+	],
+	dynamicStatus:[//动态-状态
+		{key:1,val:"草稿"},
+		{key:2,val:"已发布"},
+	],
+	groupStatus:[//群组-状态
+		{key:1,val:"生效"},
+		{key:2,val:"停用"},
+	],
+	processStatus:[//待办理流程-状态
+		{key:1,val:"征询中"},
+		{key:2,val:"审核中"},
+		{key:3,val:"转审中"},
+		{key:4,val:"已同意"},
+		{key:5,val:"已拒绝"},
+		{key:6,val:"已撤回"},
+	],
+}

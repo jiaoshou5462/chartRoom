@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title></title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+  <script src="/h5/fastclick.js"></script>
+	<script>
+		if ('addEventListener' in document) {
+			document.addEventListener('DOMContentLoaded', function () {
+        FastClick.attach(document.body);
+        FastClick.prototype.focus = (ele) => { 'use strict'; ele.focus(); }; //修改focus()方法
+			}, false);
+		}
+		if (!window.Promise) {
+			document.writeln('<script src="https://as.alipayobjects.com/g/component/es6-promise/3.2.2/es6-promise.min.js"' + '>' + '<' + '/' + 'script>');
+		}
+	</script>
+</head>
+
+<body>
+	<div id="app"></div>
+</body>
+
+</html>
