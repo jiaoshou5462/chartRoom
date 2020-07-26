@@ -5,6 +5,9 @@
         class="avatar-uploader"
         :action="actionUrl"
         :show-file-list="false"
+        :data="{
+          'id':userObj.id
+        }"
         :on-success="handleAvatarSuccess"
         :before-upload="beforeAvatarUpload">
         <img v-if="imageUrl" :src="imageUrl" class="avatar">
@@ -12,12 +15,12 @@
       </el-upload>
       <div class="tips">点击上传头像</div>
       <div class="inp-box">
-        <el-input placeholder="请输入用户名"></el-input>
+        <el-input placeholder="请输入用户名" v-model="name"></el-input>
       </div>
     </div>
     <div class="btn-box">
-      <el-button type="primary" @click="confirm">确定</el-button>
-      <el-button type="" @click="action(false)">关闭</el-button>
+      <el-button class="btn" type="" @click="action(false)">取消</el-button>
+      <el-button class="btn" type="primary" @click="confirm">确定</el-button>
     </div>
   </htmlModal>
 </template>
@@ -26,22 +29,54 @@ export default {
   data () {
     return{
       imageUrl: '',
-      actionUrl:'',
+      actionUrl: api.uploadfile,
+      name:'',
+    }
+  },
+  components:{
+    htmlModal: () => 	import('components/htmlModal'),
+  },
+  computed: {
+    userObj(){
+      return this.$store.state.login.userObj;
     }
   },
   mounted(){
-
+    if(this.userObj.face){
+      this.imageUrl = `${api.getFile}?face=${this.userObj.face}`;
+    }else{
+      this.imageUrl = '';
+    }
+    this.name = this.userObj.name;
   },
   methods:{
     //确认
     confirm(){
-
+      http.post({
+        url:`${api.addName}`,
+        params:{
+          account:this.userObj.account,
+          name:this.name,
+        }
+      }).then(res => {
+        this.userObjUpdate('name',res.result.name);
+        this.$emit('emit',true);
+      }).catch(()=>{});
     },
     action(res){
 			this.$emit('emit',false);
     },
     handleAvatarSuccess(res, file) {
-      this.imageUrl = URL.createObjectURL(file.raw);
+      this.userObjUpdate('face',res.result);
+      //图片url
+      this.imageUrl = `${api.getFile}?face=${res.result}`;
+    },
+    userObjUpdate(key,newObj){
+      let userObj = {...this.userObj};
+      userObj[key] = newObj;
+      this.$store.commit('setUser',userObj);
+      localStorage.setItem('userObj',JSON.stringify(userObj));
+      return userObj;
     },
     beforeAvatarUpload(file) {
       const isJPG = file.type === 'image/jpeg';
@@ -55,9 +90,7 @@ export default {
       return isJPG && isLt2M;
     }
   },
-  components:{
-    htmlModal: () => 	import('components/htmlModal'),
-  }
+  
 }
 </script>
 <style lang="less" scoped>
@@ -76,7 +109,10 @@ export default {
   }
 }
 .btn-box{
-	text-align: center;
+  text-align: right;
+  .btn{
+    width: 120px;
+  }
 }
 .avatar-uploader{
   border: 1px dashed #ccc;

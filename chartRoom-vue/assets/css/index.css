@@ -40,3 +40,26 @@ pre{
 .el-dialog__headerbtn:hover{
   background: #f1f1f1;
 }
+
+.scroll-bar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.scroll-bar::-webkit-scrollbar-track-piece {
+  background-color: transparent; 
+  -webkit-border-radius: 5px;
+}
+.scroll-bar::-webkit-scrollbar-thumb:vertical {
+  height: 12px;
+  background-color: #BDBDBD;
+  -webkit-border-radius: 5px;
+}
+.scroll-bar::-webkit-scrollbar-thumb:horizontal {
+  width: 12px;
+  background-color: #BDBDBD;
+  -webkit-border-radius: 5px;
+}
+.scroll-bar::-webkit-scrollbar-thumb:vertical:hover,::-webkit-scrollbar-thumb:horizontal:hover
+{
+  background-color: #808080;
+}

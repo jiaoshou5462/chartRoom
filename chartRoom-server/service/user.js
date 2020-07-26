@@ -41,21 +41,27 @@ async function registerUser(account, password) {
 //修改昵称
 async function addName(account, name) {
   let find = `select * from user where name = '${name}'`
-  return allSqlAction.allSqlAction(find).then(res=>{
-    if(res.length == 0){
+  return allSqlAction.allSqlAction(find).then(findRes=>{
+    let success =  { result: {
+      'account':account,
+      'name':name,
+    }, msg: '', code: 0 };
+
+    if(findRes.length == 0){
       let sql = `update user set name ='${name}' where account ='${account}'`
       return allSqlAction.allSqlAction(sql).then(res => {
         if (res.affectedRows == 1) {
-          return { result: {
-            'account':account,
-            'name':name,
-          }, msg: '', code: 0 }
+          return success;
         } else {
           return { result: '', msg: '修改昵称失败', code: 1 }
         }
       })
     }else{
-      return { result: '', msg: '该昵称已被注册，请换一个试试', code: 1 }
+      if(findRes[0].account == account){
+        return success;
+      }else{
+        return { result: '', msg: '该昵称已被注册，请换一个试试', code: 1 }
+      }
     }
   })
   
@@ -89,10 +95,23 @@ async function uploadFile(obj) {
     }
   })
 }
+async function getFile(obj) {
+  let {face} = obj;
+  let sql = `select * from user where face = '${face}'`;
+  return allSqlAction.allSqlAction(sql).then(res => {
+    if (res.length == 0) {
+      return { result: '', msg: '图片获取失败', code: 1 }
+    } else {
+      return { result: res[0].face, msg: '', code: 0 }
+    }
+  })
+}
+
 module.exports = {
   findUser,
   registerUser,
   addName,
   sendMsg,
   uploadFile,
+  getFile,
 }

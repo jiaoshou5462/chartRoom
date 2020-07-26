@@ -25,7 +25,7 @@ module.exports = merge(common, {
 		//设置代理
 		proxy: {
 			"/chartRoom": {
-				target: "http://192.168.8.89:3000",
+				target: "http://192.168.2.102:3000",
 				changeOrigin: true,
 				secure: false,
 				pathRewrite: {

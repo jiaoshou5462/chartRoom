@@ -33,6 +33,7 @@ let mySocket = (server)=>{
         name:data.name,
         content:data.content,
         time:data.time,
+        face:data.face,
       }
       socket.emit('sendMsg',sendObj);
       socket.broadcast.emit('sendMsg',sendObj);

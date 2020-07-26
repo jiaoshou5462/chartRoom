@@ -1,8 +1,10 @@
 const state = {
-  userObj:{
-    name: '',//昵称
-    account:'',//账号
-  }
+	userObj: {
+		name: '',//昵称
+		account: '',//账号
+		id: '',//用户id
+		face: '',
+	},
 }
 // getters
 const getters = {}
@@ -14,7 +16,7 @@ const mutations = {
 }
 // actions
 const actions = {
-	
+
 }
 export default {
 	state,
