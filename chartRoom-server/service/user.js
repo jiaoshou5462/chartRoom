@@ -11,7 +11,7 @@ async function findUser(account, password) {
       return login(account, password);
     }
   })
-}
+} 
 //登录
 async function login(account, password) {
   let sql = `select * from user where account = '${account}' and password = '${password}'`
@@ -20,6 +20,7 @@ async function login(account, password) {
       return { result: {
         account:account,
         name:res[0].name,
+        id:res[0].id
       }, msg: '', code: 0 }
     } else {
       return { result: '', msg: '密码错误', code: 1 }
@@ -60,7 +61,8 @@ async function addName(account, name) {
   
 }
 //发送消息
-async function sendMsg(account, content, name) {
+async function sendMsg(obj) {
+  let {account, content, name} = obj;
   let time = tools.format(new Date(),'yyyy-MM-dd hh:mm:ss');
   let timestamp = Date.parse(new Date());
   let sql = `insert into record (msg_account,content,time,timestamp,name) values ('${account}','${content}','${time}','${timestamp}','${name}')`;
@@ -75,9 +77,22 @@ async function sendMsg(account, content, name) {
     }
   })
 }
+//上传头像后，插入文件路径
+async function uploadFile(obj) {
+  let {id, face} = obj;
+  let sql = `update user set face ='${face}' where id ='${id}'`;
+  return allSqlAction.allSqlAction(sql).then(res => {
+    if (res.affectedRows == 1) {
+      return { result: face, msg: '', code: 0 }
+    } else {
+      return { result: '', msg: '上传失败', code: 1 }
+    }
+  })
+}
 module.exports = {
   findUser,
   registerUser,
   addName,
   sendMsg,
+  uploadFile,
 }

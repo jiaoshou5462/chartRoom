@@ -1,5 +1,8 @@
 const user = require("../service/user")
 
+const fs = require('fs');
+const path = require('path');
+
 async function registerUser(ctx,next){
   let {account,password} = ctx.request.body
   let data = await user.registerUser(account,password)
@@ -16,8 +19,27 @@ async function addName(ctx,next){
   return ctx.response.body = data
 }
 async function sendMsg(obj){
-  let {account,content,name} = obj;
-  let data = await user.sendMsg(account,content,name)
+  let data = await user.sendMsg(obj)
+  return ctx.response.body = data
+}
+async function uploadFile(ctx,next){
+
+  // 上传单个文件
+  const file = ctx.request.files.file; // 获取上传文件
+  //生成文件名
+  let suffix = file.name.substring(file.name.lastIndexOf('.'),file.name.length);
+  let fileName = `${(new Date()).valueOf()}userID${ctx.request.body.id}${suffix}`;
+  // 创建可读流
+  const reader = fs.createReadStream(file.path);
+  
+  let filePath = path.join('./public/upload/') + `${fileName}`;
+  // 创建可写流
+  const upStream = fs.createWriteStream(filePath);
+  // 可读流通过管道写入可写流
+  reader.pipe(upStream);
+  setFilePath = `/${filePath.replace(/\\/g,'/')}`;
+  let obj = {id:ctx.request.body.id,face:setFilePath};
+  let data = await user.uploadFile(obj)
   return ctx.response.body = data
 }
 module.exports={
@@ -25,4 +47,5 @@ module.exports={
  findUser,
  addName,
  sendMsg,
+ uploadFile,
 }

@@ -11,6 +11,7 @@ router.post('/findUser', controller.findUser)
 router.post('/addName', controller.addName)
 router.post('/sendMsg', controller.sendMsg)
 
+router.post('/uploadfile',controller.uploadFile);
 // router.get('/', function (ctx, next) {
 //   ctx.body = 'this is a users/bar response'
 // })
