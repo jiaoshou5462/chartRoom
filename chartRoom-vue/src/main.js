@@ -32,7 +32,7 @@ import socketIoClient from 'socket.io-client'
 Vue.use(new VueSocketIO({
     debug: true,
     // connection: `//${window.location.host}`,
-    connection: socketIoClient('http://192.168.2.102:3000'),
+    connection: socketIoClient('http://192.168.8.89:3000'),
     vuex: {
         store,
         actionPrefix: 'SOCKET_', //为vuex设置的两个前缀

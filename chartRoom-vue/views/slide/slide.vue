@@ -1,9 +1,19 @@
 <template>
   <div class="slide">
     <div class="menu">
-      <div class="face" @click="popShow = true;">
-        <img :src="face" v-if="face" title="编辑资料">
-        <img :src="require('images/face.jpg')" v-else title="编辑资料">
+      <div class="top">
+        <div class="face" @click="popShow = true;">
+          <img :src="face" v-if="face" title="编辑资料">
+          <img :src="require('images/face.jpg')" v-else title="编辑资料">
+        </div>
+        <div class="add-contact" @click="addShow = true;" title="添加联系人">
+          <i class="el-icon-user-solid"></i>
+          <i class="el-icon-plus posi"></i>
+        </div>
+        <div class="add-contact" @click="msgShow = true;" title="通知">
+          <i class="el-icon-message-solid"></i>
+          <span class="message posi" v-if="msgNum>0">{{msgNum}}</span>
+        </div>
       </div>
       <div class="logout">
         <i class="el-icon-switch-button" @click="logout"></i>
@@ -11,13 +21,23 @@
     </div>
     <div class="contacts">
       <div class="search">
-        <el-input placeholder="搜索联系人" v-model="search" size="mini">
-          <el-button size="mini" slot="append" icon="el-icon-search"></el-button>
+        <el-input placeholder="搜索联系人" v-model="search" size="mini" @input="searchInput" clearable="">
+          <el-button size="mini" slot="append" icon="el-icon-search"
+          @click="searchContact" title="搜索"></el-button>
         </el-input>
       </div>
       <div class="list scroll-bar">
-        <div class="item" v-for="(item,index) of list" :key="index" @click="clickItem(item)"
-        :class="{active:item.account==selContact}">
+        <div class="item" @click="clickItem('commonRoom')" :class="{active:'commonRoom'==selContact}">
+          <div class="face">
+            <img :src="require('images/face.jpg')">
+          </div>
+          <div class="info">
+            <span class="name">公共聊天室</span>
+            <p>大家一起聊聊天</p>
+          </div>
+        </div>
+        <div class="item" v-for="(item,index) of resList" :key="index" @click="clickItem(item)"
+        :class="{active:item.id==selContact}">
           <div class="face">
             <img :src="`${baseUrl}${item.face}`" v-if="item.face" >
             <img :src="require('images/face.jpg')" v-else>
@@ -29,8 +49,12 @@
         </div>
       </div>
     </div>
-
-    <popInfo v-if="popShow" @emit="popEmit"></popInfo>
+    <!-- 修改个人信息 -->
+    <pop-info v-if="popShow" @emit="popShow = false;"></pop-info>
+    <!-- 添加联系人 -->
+    <add-contacts v-if="addShow" @emit="addShow = false;"></add-contacts>
+    <!-- 通知 -->
+    <message v-if="msgShow" @emit="msgShow = false;"></message>
   </div>
 </template>
 <script>
@@ -38,12 +62,21 @@ export default {
   data () {
     return{
       popShow:false,
-      baseUrl:api.getFile,
+      addShow:false,
+      msgShow:false,
+      msgNum:'',//通知数量
       baseUrl: `${api.getFile}?face=`,
       search:'',
-      list:[],
-      selContact:'',
+      list:[],//原列表
+      resList:[],//搜索结果列表
+      selContact:'commonRoom',
+      searchTimer:null,
     }
+  },
+  components:{
+    popInfo: () => 	import('./pop_info'),
+    addContacts: () => 	import('./add_contacts'),
+    message: () => 	import('./message'),
   },
   computed: {
     face(){
@@ -53,14 +86,52 @@ export default {
       } else{
         return '';
       }
+    },
+    userObj(){
+      return this.$store.state.login.userObj;
     }
   },
   mounted(){
     this.getContacts();
+    this.getMessageNum();
+    this.listenerSocket();
   },
   methods:{
     clickItem(item){
-      this.selContact = item.account;
+      if(item=='commonRoom'){
+        this.selContact = 'commonRoom'
+      }else{
+        this.selContact = item.id;
+      }
+      this.$emit('emit',item);
+    },
+    listenerSocket(){
+      this.sockets.listener.subscribe('getMessageNum', (data) => {
+        this.msgNum = data.result;
+      });
+      this.sockets.listener.subscribe('getContacts', (data) => {
+        this.list = data.result;
+        this.$emit('list',this.list)
+      });
+    },
+    searchContact(){
+      if(!this.search.trim()){
+        this.resList = JSON.parse(JSON.stringify(this.list));
+      }else{
+        let list = [];
+        for(let item of this.list){
+          if(item.name.includes(this.search)){
+            list.push(item);
+          }
+        }
+        this.resList = list;
+      }
+    },
+    searchInput(){
+      clearTimeout(this.searchTimer);
+      this.searchTimer = setTimeout(()=>{
+        this.searchContact();
+      },300)
     },
     popEmit(res){
       if(res){
@@ -69,12 +140,26 @@ export default {
       this.popShow = false;
     },
     getContacts(){
-      this.list = [
-        {account:'1',name:'啊啊啊',face:'1595756701517userID7.jpg'},
-        {account:'2',name:'11123',face:'1595756701517userID7.jpg'},
-        {account:'3',name:'是多少',face:'1595756701517userID7.jpg'},
-        {account:'4',name:'发',face:'1595756701517userID7.jpg'},
-      ]
+      http.get({
+        url: api.getContacts,
+        params:{
+          id: this.userObj.id,
+        },
+      }).then((res)=>{
+        this.list = res.result;
+        this.searchContact();
+        this.$emit('list',this.list)
+      }).catch(() => {});
+    },
+    getMessageNum(){
+      http.get({
+        url:`${api.getMessageNum}`,
+        params:{
+          id: this.userObj.id,
+        },
+      }).then((res)=>{
+        this.msgNum = res.result;
+      }).catch(() => {});
     },
     //退出登录
     logout(){
@@ -90,9 +175,7 @@ export default {
       }).catch(() => {});
     }
   },
-  components:{
-    popInfo: () => 	import('./pop_info'),
-  }
+  
 }
 </script>
 <style lang="less" scoped>
@@ -120,6 +203,38 @@ export default {
       border-radius: 4px;
     }
   }
+  .add-contact{
+    position: relative;
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 50px;
+    cursor: pointer;
+    color: #ddd;
+    i{
+      font-size: 30px;
+    }
+    .posi{
+      position: absolute;
+      right: 2px;top: 8px;
+      font-size: 16px;
+    }
+    .message{
+      background: #F56C6C;
+      color: #fff;
+      border-radius: 5px;
+      font-size: 12px;
+      padding: 0 5px;
+      right: auto;
+      left: 28px;
+    }
+    &:hover{
+      color: #fff;
+    }
+  }
+  
   .logout{
     width: 100%;
     flex: none;
@@ -161,8 +276,15 @@ export default {
       }
       .info{
         flex: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
         .name{
           font-size: 15px;
+        }
+        p{
+          font-size: 12px;
+          color: #999;
         }
       }
       &:hover{

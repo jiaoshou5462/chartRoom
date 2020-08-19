@@ -64,7 +64,7 @@ export default {
       }).catch(()=>{});
     },
     action(res){
-			this.$emit('emit',false);
+			this.$emit('emit',res);
     },
     handleAvatarSuccess(res, file) {
       this.userObjUpdate('face',res.result);
@@ -79,10 +79,10 @@ export default {
       return userObj;
     },
     beforeAvatarUpload(file) {
-      const isJPG = file.type === 'image/jpeg';
+      const isJPG = file.type === 'image/jpeg' || file.type === 'image/png';
       const isLt2M = file.size / 1024 / 1024 < 2;
       if (!isJPG) {
-        this.$message.error('上传头像图片只能是 JPG 格式!');
+        this.$message.error('上传头像图片只能是 JPG/png 格式!');
       }
       if (!isLt2M) {
         this.$message.error('上传头像图片大小不能超过 2MB!');

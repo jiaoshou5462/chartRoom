@@ -1,78 +1,56 @@
 <template>
-  <div class="home">
-    <div class="window">
-      <div class="left">
-        <slideLeft @emit="slideEmit" @list="setSlideList"></slideLeft>
-      </div>
-      <div class="right-box">
-        <div class="right" v-show="chatShow=='commonRoom'">
-          <div class="head">
-            <div class="name">公共聊天室</div>
-            <div class="time">（在线人数 {{onlineNum}}） {{currentTime}}</div>
+  <div class="right">
+    <div class="head">
+      <div class="name">{{chatItem.name}}</div>
+    </div>
+    <div class="message-box scroll-bar" ref="messageBox" @scroll="msgContentScroll" v-loading="msgLoading">
+      <div class="msg-height" ref="msgHeight">
+        <div class="msg-item" :class="{myself:item.name==userObj.name}" v-for="item of msgList" :key="item.id">
+          <div class="msg-face">
+            <img :src="`${baseUrl}${item.face}`" v-if="item.face" title="查看资料">
+            <img :src="require('images/face.jpg')" v-else title="查看资料">
           </div>
-          <div class="message-box scroll-bar" ref="messageBox" @scroll="msgContentScroll" v-loading="msgLoading">
-            <div class="msg-height" ref="msgHeight">
-              <div class="msg-item" :class="{myself:item.name==userObj.name}" v-for="item of msgList" :key="item.id">
-                <div class="msg-enter" v-if="item.isEnter">
-                  <span>{{item.name}}进入房间</span>
-                </div>
-                <div class="msg-enter" v-else-if="item.isLeave">
-                  <span>{{item.name}}离开房间</span>
-                </div>
-                <template v-else>
-                  <div class="msg-face">
-                    <img :src="`${baseUrl}${item.face}`" v-if="item.face" title="查看资料">
-                    <img :src="require('images/face.jpg')" v-else title="查看资料">
-                  </div>
-                  <div class="msg-item-info">
-                    <div class="msg-head">
-                      <span class="name">{{item.name}}</span>
-                      <span class="time">{{item.time}}</span>
-                    </div>
-                    <div class="msg-content">
-                      <span>
-                        <i></i>
-                        <pre>{{item.content}}</pre>
-                      </span>
-                    </div>
-                  </div>
-                </template>
-              </div>
+          <div class="msg-item-info">
+            <div class="msg-head">
+              <span class="name">{{item.name}}</span>
+              <span class="time">{{item.time}}</span>
             </div>
-            <!-- 用于加载聊天记录之后计算滚动条高度 -->
-            <div class="msg-cover" ref="recordHeight" v-show="recordList.length">
-              <div class="msg-item"  v-for="item of recordList" :key="item.id">
-                <div class="msg-face">
-                  <img :src="`${baseUrl}${item.face}`" v-if="item.face" title="查看资料">
-                  <img :src="require('images/face.jpg')" v-else title="查看资料">
-                </div>
-                <div class="msg-item-info">
-                  <div class="msg-head">
-                    <span class="name">{{item.name}}</span>
-                    <span class="time">{{item.time}}</span>
-                  </div>
-                  <div class="msg-content">
-                    <span>
-                      <i></i>
-                      <pre>{{item.content}}</pre>
-                    </span>
-                  </div>
-                </div>
-              </div>
+            <div class="msg-content">
+              <span>
+                <i></i>
+                <pre>{{item.content}}</pre>
+              </span>
             </div>
-          </div>
-          <el-input v-model="content" class="edit-box" type="textarea" rows="5" maxlength="500" show-word-limit 
-          placeholder="在这里输入内容 (Ctrl + Enter 键发送消息)"></el-input>
-          <div class="tips">
-            <span>Ctrl + Enter 键发送消息</span>
-            <el-button size="small" type="primary" @click="submit">发 送</el-button>
           </div>
         </div>
-        <template v-for="item of slideList">
-          <chatRoom :chatItem="item" :style="showAllChat" @showChatAll="getShowChatAll"
-          :ref="'chatRoom'+item.contact_id" v-show="item.chatRoomShow"></chatRoom>
-        </template>
       </div>
+      <!-- 用于加载聊天记录之后计算滚动条高度 -->
+      <div class="msg-cover" ref="recordHeight" v-show="recordList.length">
+        <div class="msg-item"  v-for="item of recordList" :key="item.id">
+          <div class="msg-face">
+            <img :src="`${baseUrl}${item.face}`" v-if="item.face" title="查看资料">
+            <img :src="require('images/face.jpg')" v-else title="查看资料">
+          </div>
+          <div class="msg-item-info">
+            <div class="msg-head">
+              <span class="name">{{item.name}}</span>
+              <span class="time">{{item.time}}</span>
+            </div>
+            <div class="msg-content">
+              <span>
+                <i></i>
+                <pre>{{item.content}}</pre>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <el-input v-model="content" class="edit-box" type="textarea" rows="5" maxlength="500" show-word-limit 
+    placeholder="在这里输入内容 (Ctrl + Enter 键发送消息)"></el-input>
+    <div class="tips">
+      <span>Ctrl + Enter 键发送消息</span>
+      <el-button size="small" type="primary" @click="submit">发 送</el-button>
     </div>
   </div>
 </template>
@@ -93,33 +71,24 @@ export default {
       isGetRecord:false,//聊天记录获取中
       recordList:[],//每次滚动到顶部获取聊天记录之后，塞入数据计算滚动条高度
       msgLoading:false,//消息框loading
-      isChat:false,
-      chatMessage:{},
-      chatShow:'commonRoom',
-      slideList:[],
-      showAllChat:'',//好友聊天，取消透明度隐藏
-      chatRoomNum:0,
+      listener:null,
       pre_scrollTop:0,//上一次的滚动条位子
     }
   },
+  props:['chatItem'],
   computed: {
     userObj(){
       return this.$store.state.login.userObj;
     }
   },
   components: {
-    slideLeft:()=>import('../slide/slide'),
-    chatRoom: () => import('./chat'),
   },
   mounted () {
+    //socket.io相关
     let userObj = localStorage.getItem('userObj');
     if(userObj){
       document.addEventListener('keypress',this.keypressCtrlEnter);
       this.setCurrentTime();
-
-      //socket.io相关
-      this.getSocketMsg();//订阅后台推送的消息
-      this.enterRoom();//进入房间
       this.getLatestRecords(1,new Date().valueOf());
       // this.beforeunload();
     }else{
@@ -127,6 +96,7 @@ export default {
         name:'login',
       })
     }
+    
   },
   destroyed(){
     clearTimeout(this.timer);
@@ -135,44 +105,25 @@ export default {
     this.leaveRoom();
   },
   methods: {
-    getSocketMsg(){
-      this.sockets.listener.subscribe('enterRoom', (data) => {
-        data.isEnter = true;
-        this.onlineNum = data.onlineNum;
-        this.showMsg(data);
-      });
-      this.sockets.listener.subscribe('sendMsg', (data) => {
-        this.showMsg(data);
-      });
-      this.sockets.listener.subscribe('leaveRoom', (data) => {
-        if(data.name!=this.userObj.name){
-          data.isLeave = true;
-          this.onlineNum = data.onlineNum;
-          this.showMsg(data);
-        }
-      });
-      //好友聊天监听，放在chat组件会触发重复监听，所有放这
-      this.sockets.listener.subscribe('sendMsgChat', (data) => {
-        if(data.submit_id==this.userObj.id){
-          this.$refs[`chatRoom${data.contact_id}`][0].showMsg(data);
-        }else{
-          this.$refs[`chatRoom${data.user_id}`][0].showMsg(data);
-        }
-      });
-    },
     //根据时间戳 往前获取指定条数的聊天记录 type=1 最新记录, type=2 小于改时间戳的记录
     getLatestRecords(type,timestamp){
       this.msgLoading = true;
       http.get({
-        url:`${api.getRecord}`,
+        url:`${api.getRecordChat}`,
         params:{
+          id:this.chatItem.user_id,
+          targetId:this.chatItem.contact_id,
           timestamp: timestamp,
           rows:this.rows,
           type:type,
         },
         loading:false,
       }).then(res => {
-        if(!res.result.length) return;
+        if(!res.result.length){
+          this.msgLoading = false;
+          if(type==1) this.$emit('showChatAll',this.chatItem);
+          return;
+        };
         if(type==2){//滚动到顶部 加载数据
           this.recordList = res.result;
           let recordHeight = 0;
@@ -194,47 +145,13 @@ export default {
             this.$refs.messageBox.scrollTop = msgHeight;
             this.isGetRecord = false;
             this.msgLoading = false;
+            this.$emit('showChatAll',this.chatItem);
           })
         }
       }).catch(()=>{
         this.isGetRecord = false;
         this.msgLoading = false;
       });
-    },
-    slideEmit(res){
-      if(res=='commonRoom'){
-        this.chatShow = 'commonRoom';
-        for(let item of this.slideList){
-          item.chatRoomShow = false;
-        }
-      }else{
-        this.chatShow = '';
-        let list = JSON.parse(JSON.stringify(this.slideList));
-        for(let item of list){
-          if(item.id == res.id){
-            item.chatRoomShow = true;
-          }else{
-            item.chatRoomShow = false;
-          }
-        }
-        this.slideList = list;
-      }
-    },
-    setSlideList(res){
-      for(let item of res){
-        item.chatRoomShow = true;
-      }
-      this.slideList = res;
-    },
-    //等待所有聊天框加载完毕，取消透明度隐藏
-    getShowChatAll(){
-      this.chatRoomNum = this.chatRoomNum+1;
-      if(this.chatRoomNum==this.slideList.length){
-        this.showAllChat = 'opacity:1;';//全部透明度为1
-        for(let item of this.slideList){
-          item.chatRoomShow = false;
-        }
-      }
     },
     msgContentScroll(e){
       if(this.pre_scrollTop > e.target.scrollTop){
@@ -255,16 +172,8 @@ export default {
         this.setCurrentTime();
       },1000)
     },
-    //进入房间
-    enterRoom(){
-      this.$socket.emit('enterRoom', {
-        account:this.userObj.account,
-        name:this.userObj.name,
-        id:this.userObj.id,
-      });
-    },
     //显示消息
-    showMsg(data,type){
+    showMsg(data){
       if(!this.$refs.msgHeight) return;
       let obj = {...data};
       this.msgList.push(obj);
@@ -275,13 +184,13 @@ export default {
     },
     submit(){
       if(!this.content){
-        // this.$alert('消息不能为空');
         return;
       }
       //提交消息到后台
-      this.$socket.emit('sendMsg', {
+      this.$socket.emit('sendMsgChat', {
         content:this.content,
         id:this.userObj.id,
+        targetId:this.chatItem.contact_id,
       },(res)=>{
         this.content = '';
       });
@@ -311,36 +220,9 @@ export default {
 </script>
 <style lang="less" scoped>
 @import (reference) '~css/common.less';
-.chatRoom-opacity{
-  opacity: 1 !important;
-}
-.home{
-  height: 100vh;
-  width: 100%;
-  display: flex;
-  background: #f1f1f1;
-  .flex-center-center;
-}
-.window{
-  margin-top: -40px;
-  max-width: 95%;
-  height: 700px;
-  background: #fff;
-  box-shadow: 0 0 10px #ddd;
-  border-radius: 4px;
-  overflow: hidden;
-  display: flex;
-  width: 1000px;
-}
-.left{
-  flex: 0 0 300px;
-  border-right: 1px solid #eee;
-}
-.right-box{
-  position: relative;
-  flex: auto;
-}
+
 .right{
+  opacity: 0;
   width: 100%;
   height: 100%;
   position: absolute;
